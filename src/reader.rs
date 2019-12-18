@@ -1,4 +1,7 @@
-use crate::{loom::cell::CausalCell, shared::WriteGuard};
+use crate::{
+    loom::{cell::CausalCell, sync::RwLockWriteGuard},
+    Shared,
+};
 
 use std::{
     borrow::Borrow,
@@ -8,7 +11,7 @@ use std::{
 
 #[derive(Debug)]
 pub struct Reader<'a, K: Hash + Eq, V> {
-    pub(super) shared: WriteGuard<'a, K, V>,
+    pub(super) shared: RwLockWriteGuard<'a, Shared<K, V>>,
 }
 
 pub struct Iter<'a, K, V>(
@@ -43,7 +46,6 @@ impl<'a, K: Hash + Eq, V> Reader<'a, K, V> {
         'b: 'a,
     {
         self.shared
-            .to_ref()
             .iter()
             .filter_map(move |(_, map)| map.with(|map| unsafe { (*map).get(&key) }))
     }
@@ -54,7 +56,6 @@ impl<'a, K: Hash + Eq, V> Reader<'a, K, V> {
         Q: Hash + Eq,
     {
         self.shared
-            .to_ref()
             .iter()
             .any(|(_, map)| map.with(|map| unsafe { (*map).contains_key(key) }))
     }
@@ -62,7 +63,6 @@ impl<'a, K: Hash + Eq, V> Reader<'a, K, V> {
     pub fn iter(&self) -> Iter<'_, K, V> {
         Iter(
             self.shared
-                .to_ref()
                 .iter()
                 .flat_map(|(_, map)| map.with(|map| unsafe { (*map).iter() })),
         )
@@ -71,7 +71,6 @@ impl<'a, K: Hash + Eq, V> Reader<'a, K, V> {
     pub fn keys(&self) -> Keys<'_, K, V> {
         Keys(
             self.shared
-                .to_ref()
                 .iter()
                 .flat_map(|(_, map)| map.with(|map| unsafe { (*map).keys() })),
         )
@@ -80,7 +79,6 @@ impl<'a, K: Hash + Eq, V> Reader<'a, K, V> {
     pub fn values(&self) -> Values<'_, K, V> {
         Values(
             self.shared
-                .to_ref()
                 .iter()
                 .flat_map(|(_, map)| map.with(|map| unsafe { (*map).values() })),
         )

@@ -2,7 +2,11 @@ pub(crate) use self::inner::*;
 
 #[cfg(test)]
 mod inner {
-    pub(crate) use loom::*;
+    pub(crate) use loom::{cell, model, thread};
+    pub(crate) mod sync {
+        pub(crate) use loom::sync::*;
+        pub(crate) use std::sync::TryLockError;
+    }
 }
 
 #[cfg(not(test))]
