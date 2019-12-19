@@ -1,3 +1,7 @@
+//!
+//! ## What
+//!
+//! `SnapMap` is a _multi-producer, single concurrent consumer_
 pub(crate) mod loom;
 pub mod reader;
 #[doc(inline)]
@@ -16,6 +20,9 @@ mod tests;
 pub struct SnapMap<K: Hash + Eq, V> {
     shared: Arc<RwLock<Shared<K, V>>>,
 }
+
+unsafe impl<K: Hash + Eq, V> Send for SnapMap<K, V> {}
+unsafe impl<K: Hash + Eq, V> Sync for SnapMap<K, V> {}
 
 #[derive(Debug)]
 pub struct Writer<K: Hash + Eq, V> {
